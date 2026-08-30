@@ -1,0 +1,41 @@
+* text=auto
+
+*.cs        text diff=csharp
+*.csx       text diff=csharp
+*.md        text
+*.mdx       text
+*.json      text
+*.xml       text
+*.yml       text
+*.yaml      text
+*.props     text
+*.targets   text
+
+*.sln       text
+*.slnx      text
+*.csproj    text
+
+*.sh        text eol=lf
+*.bash      text eol=lf
+
+*.cmd       text eol=crlf
+*.bat       text eol=crlf
+*.ps1       text eol=crlf
+
+*.g.cs                  text eol=lf linguist-generated=true
+*.generated.cs          text eol=lf linguist-generated=true
+*.Designer.cs           text eol=lf linguist-generated=true
+**/Generated/**/*.cs    text eol=lf linguist-generated=true
+
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.dll       binary
+*.pdb       binary
+*.exe       binary
+*.snk       binary
+*.nupkg     binary
+*.snupkg    binary
+*.zip       binary
