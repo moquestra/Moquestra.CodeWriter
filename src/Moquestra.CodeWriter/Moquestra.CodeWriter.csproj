@@ -6,6 +6,18 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <PackageId>Moquestra.CodeWriter</PackageId>
+    <Description>Source-only text writer for code generation.</Description>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Update="**/*.cs" Pack="true" PackagePath="contentFiles/cs/netstandard2.0/Moquestra.CodeWriter/" />
+  </ItemGroup>
+
   <ItemGroup>
     <InternalsVisibleTo Include="Moquestra.CodeWriter.Tests" />
   </ItemGroup>
