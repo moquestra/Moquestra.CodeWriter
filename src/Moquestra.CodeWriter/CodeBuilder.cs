@@ -130,7 +130,13 @@ namespace Moquestra.CodeWriter
 
                 start = newline + 1;
 
-                if (start < value.Length && column > 0)
+                if (start >= value.Length)
+                    return;
+
+                if (value[start] == '\n')
+                    continue;
+
+                if (column > 0)
                     _builder.Append(' ', column);
             }
         }

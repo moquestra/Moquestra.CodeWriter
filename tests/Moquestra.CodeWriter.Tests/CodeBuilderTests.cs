@@ -105,6 +105,17 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
+        public void Write_WithMultilineValueContainingEmptyLine_LeavesEmptyLineUnindented()
+        {
+            var builder = new CodeBuilder();
+            var body = "a();\n\nb();";
+
+            builder.Write($"    {body}");
+
+            Assert.Equal("    a();\n\n    b();", builder.ToString());
+        }
+
+        [Fact]
         public void Write_WithNestedBuilder_ReindentsRenderedText()
         {
             var inner = new CodeBuilder();
