@@ -13,10 +13,38 @@ namespace Moquestra.CodeWriter
     internal sealed class CodeBuilder
     {
         private readonly StringBuilder _builder = new StringBuilder();
+        private readonly PreservedPrefixParts _defaultPrefixParts;
+
+        /// <summary>
+        /// Creates a builder that masks whole continuation prefixes by
+        /// default.
+        /// </summary>
+        public CodeBuilder()
+            : this(PreservedPrefixParts.None)
+        {
+        }
+
+        /// <summary>
+        /// Creates a builder that preserves the character kinds selected by
+        /// <paramref name="prefixParts"/> in continuation line prefixes by
+        /// default.
+        /// </summary>
+        /// <param name="prefixParts">The character kinds to preserve verbatim
+        /// in continuation line prefixes by default.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="prefixParts"/>
+        /// contains undefined flags.</exception>
+        public CodeBuilder(PreservedPrefixParts prefixParts)
+        {
+            if ((prefixParts & ~PreservedPrefixParts.All) != 0)
+                throw new ArgumentOutOfRangeException(nameof(prefixParts));
+
+            _defaultPrefixParts = prefixParts;
+        }
 
         /// <summary>
         /// Renders the interpolated string with the invariant culture and
-        /// accumulates it.
+        /// accumulates it. Continuation prefixes of multiline values follow the
+        /// preserved parts specified at construction.
         /// </summary>
         /// <param name="text">The interpolated string to accumulate. Cannot be null.</param>
         /// <exception cref="ArgumentNullException"><paramref name="text"/> is null.</exception>
@@ -25,7 +53,7 @@ namespace Moquestra.CodeWriter
         /// component, an out-of-range argument index, or an unmatched brace.</exception>
         public void Write(FormattableString text)
         {
-            Write(text, PreservedPrefixParts.None);
+            Write(text, _defaultPrefixParts);
         }
 
         /// <summary>

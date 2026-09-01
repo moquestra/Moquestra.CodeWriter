@@ -293,6 +293,35 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
+        public void Write_WithBuilderDefaultAllParts_ReplicatesLinePrefix()
+        {
+            var builder = new CodeBuilder(PreservedPrefixParts.All);
+            var body = "a\nb";
+
+            builder.Write($"// {body}");
+
+            Assert.Equal("// a\n// b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithExplicitParts_OverridesBuilderDefault()
+        {
+            var builder = new CodeBuilder(PreservedPrefixParts.All);
+            var body = "a\nb";
+
+            builder.Write($"\t- {body}", PreservedPrefixParts.None);
+
+            Assert.Equal("\t- a\n   b", builder.ToString());
+        }
+
+        [Fact]
+        public void Constructor_WithUndefinedParts_ThrowsArgumentOutOfRangeException()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => new CodeBuilder((PreservedPrefixParts)4));
+        }
+
+        [Fact]
         public void Write_WithUndefinedParts_ThrowsArgumentOutOfRangeException()
         {
             var builder = new CodeBuilder();
