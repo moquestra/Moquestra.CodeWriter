@@ -160,7 +160,7 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
-        public void Write_WithWhitespaceOnlyFirstValueLine_LeavesFirstLineUntouched()
+        public void Write_WithLiteralCharactersBeforeWhitespaceOnlyFirstValueLine_KeepsLine()
         {
             var builder = new CodeBuilder();
             var body = "  \nx();";
@@ -328,6 +328,114 @@ namespace Moquestra.CodeWriter.Tests
 
             Assert.Throws<ArgumentOutOfRangeException>(
                 () => builder.Write($"a", (PreservedPrefixParts)4));
+        }
+
+        [Fact]
+        public void Write_WithWhitespaceOnlyLineCompletedAnywhere_MatchesSingleValue()
+        {
+            var head = "x();\n   ";
+            var singleValue = new CodeBuilder();
+            var literalSplit = new CodeBuilder();
+            var writeSplit = new CodeBuilder();
+            var body = "x();\n   \n";
+
+            singleValue.Write($"    {body}");
+            literalSplit.Write($"    {head}\n");
+            writeSplit.Write($"    {head}");
+            writeSplit.Write($"\n");
+
+            Assert.Equal("    x();\n\n", singleValue.ToString());
+            Assert.Equal(singleValue.ToString(), literalSplit.ToString());
+            Assert.Equal(singleValue.ToString(), writeSplit.ToString());
+        }
+
+        [Fact]
+        public void Write_WithLiteralSpaceAfterValueWhitespace_KeepsLine()
+        {
+            var builder = new CodeBuilder();
+            var body = "a\n ";
+
+            builder.Write($"{body} \nb");
+
+            Assert.Equal("a\n  \nb", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithLiteralWhitespaceOnlyLine_KeepsLine()
+        {
+            var builder = new CodeBuilder();
+
+            builder.Write($"a\n   \nb");
+
+            Assert.Equal("a\n   \nb", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithPrefixedWhitespaceLineCompletedByNextWrite_TrimsPrefixToo()
+        {
+            var builder = new CodeBuilder();
+            var body = "a\n   ";
+
+            builder.Write($"// {body}");
+            builder.Write($"\nb");
+
+            Assert.Equal("// a\n\nb", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithWhitespaceOnlyFirstValueLineWithoutLiteralCharacters_TrimsLine()
+        {
+            var builder = new CodeBuilder();
+            var body = " \na";
+
+            builder.Write($"{body}");
+
+            Assert.Equal("\na", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithCarriageReturnNewlines_NormalizesToLineFeed()
+        {
+            var crlf = new CodeBuilder();
+            var cr = new CodeBuilder();
+
+            crlf.Write($"a\r\nb");
+            cr.Write($"a\rb");
+
+            Assert.Equal("a\nb", crlf.ToString());
+            Assert.Equal("a\nb", cr.ToString());
+        }
+
+        [Fact]
+        public void Write_WithCarriageReturnInValue_NormalizesToLineFeed()
+        {
+            var builder = new CodeBuilder();
+            var body = "a\r\nb";
+
+            builder.Write($"    {body}");
+
+            Assert.Equal("    a\n    b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithCarriageReturnLineFeedSplitAcrossWrites_EmitsTwoNewlines()
+        {
+            var builder = new CodeBuilder();
+
+            builder.Write($"a\r");
+            builder.Write($"\nb");
+
+            Assert.Equal("a\n\nb", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithTrailingCarriageReturn_NormalizesImmediately()
+        {
+            var builder = new CodeBuilder();
+
+            builder.Write($"a\r");
+
+            Assert.Equal("a\n", builder.ToString());
         }
 
         [Fact]

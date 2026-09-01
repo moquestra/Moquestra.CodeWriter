@@ -9,11 +9,19 @@ namespace Moquestra.CodeWriter
     /// written as-is, and multiline interpolated values are reindented from
     /// their second line with a continuation prefix derived from the line
     /// where the interpolation begins.
+    /// CRLF, CR, and LF are all normalized to a single LF.
     /// </summary>
     internal sealed class CodeBuilder
     {
         private readonly StringBuilder _builder = new StringBuilder();
         private readonly PreservedPrefixParts _defaultPrefixParts;
+
+        // Index in _builder where the current line starts.
+        private int _lineStart;
+
+        // Eligible only while the line contains generated prefixes and value
+        // spaces or tabs.
+        private bool _lineTrimEligible = true;
 
         /// <summary>
         /// Creates a builder that preserves whole continuation prefixes by
@@ -90,7 +98,7 @@ namespace Moquestra.CodeWriter
                     if (i + 1 < format.Length &&
                         format[i + 1] == '{')
                     {
-                        _builder.Append('{');
+                        AppendLiteral('{');
                         i++;
                     }
                     else
@@ -106,7 +114,7 @@ namespace Moquestra.CodeWriter
                     if (i + 1 < format.Length &&
                         format[i + 1] == '}')
                     {
-                        _builder.Append('}');
+                        AppendLiteral('}');
                         i++;
                     }
                     else
@@ -117,7 +125,10 @@ namespace Moquestra.CodeWriter
                     continue;
                 }
 
-                _builder.Append(current);
+                if (ScanNewLine(format, ref i))
+                    continue;
+
+                AppendLiteral(current);
             }
         }
 
@@ -161,73 +172,57 @@ namespace Moquestra.CodeWriter
             return i;
         }
 
-        // Reindents a multiline value from its second line with the
-        // continuation prefix. Empties whitespace-only continuation lines.
         private void AppendValue(string value, PreservedPrefixParts prefixParts)
         {
-            if (value.IndexOf('\n') < 0)
+            if (value.IndexOf('\r') < 0 &&
+                value.IndexOf('\n') < 0)
             {
+                if (value.Length == 0)
+                    return;
+
+                if (!IsWhitespaceOnly(value, 0, value.Length))
+                    _lineTrimEligible = false;
+
                 _builder.Append(value);
 
                 return;
             }
 
             var prefix = CreateContinuationPrefix(prefixParts);
-            var start = 0;
+            var needPrefix = false;
 
-            while (true)
+            for (var i = 0; i < value.Length; i++)
             {
-                var newline = value.IndexOf('\n', start);
-
-                if (newline < 0)
+                if (ScanNewLine(value, ref i))
                 {
-                    _builder.Append(value, start, value.Length - start);
-
-                    return;
-                }
-
-                _builder.Append(value, start, newline - start);
-                _builder.Append('\n');
-
-                start = newline + 1;
-
-                if (start >= value.Length)
-                    return;
-
-                if (value[start] == '\n')
-                    continue;
-
-                var lineEnd = value.IndexOf('\n', start);
-
-                if (lineEnd >= 0 && IsWhitespaceOnly(value, start, lineEnd))
-                {
-                    start = lineEnd;
+                    needPrefix = true;
 
                     continue;
                 }
 
-                if (prefix.Length > 0)
-                    _builder.Append(prefix);
+                var current = value[i];
+
+                if (needPrefix)
+                {
+                    // Generated prefixes are excluded from trim eligibility.
+                    if (prefix.Length > 0)
+                        _builder.Append(prefix);
+
+                    needPrefix = false;
+                }
+
+                if (current != ' ' && current != '\t')
+                    _lineTrimEligible = false;
+
+                _builder.Append(current);
             }
         }
 
-        // Returns the current line prefix after the last newline, keeping
-        // preserved characters verbatim and masking the rest with spaces.
+        // Returns the current line prefix, keeping preserved characters
+        // verbatim and masking the rest with spaces.
         private string CreateContinuationPrefix(PreservedPrefixParts prefixParts)
         {
-            var lineStart = 0;
-
-            for (var i = _builder.Length - 1; i >= 0; i--)
-            {
-                if (_builder[i] == '\n')
-                {
-                    lineStart = i + 1;
-
-                    break;
-                }
-            }
-
-            var length = _builder.Length - lineStart;
+            var length = _builder.Length - _lineStart;
 
             if (length == 0)
                 return string.Empty;
@@ -236,7 +231,7 @@ namespace Moquestra.CodeWriter
 
             for (var i = 0; i < length; i++)
             {
-                var current = _builder[lineStart + i];
+                var current = _builder[_lineStart + i];
 
                 characters[i] = IsPreserved(current, prefixParts)
                     ? current
@@ -244,6 +239,53 @@ namespace Moquestra.CodeWriter
             }
 
             return new string(characters);
+        }
+
+        private void AppendLiteral(char character)
+        {
+            _lineTrimEligible = false;
+            _builder.Append(character);
+        }
+
+        private bool ScanNewLine(string source, ref int index)
+        {
+            var current = source[index];
+
+            if (current == '\r')
+            {
+                if (index + 1 < source.Length && source[index + 1] == '\n')
+                    index++;
+
+                CompleteLine();
+
+                return true;
+            }
+
+            if (current == '\n')
+            {
+                CompleteLine();
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private void CompleteLine()
+        {
+            if (_lineTrimEligible)
+                _builder.Length = _lineStart;
+
+            AppendNewLine();
+
+            _lineTrimEligible = true;
+        }
+
+        private void AppendNewLine()
+        {
+            _builder.Append('\n');
+
+            _lineStart = _builder.Length;
         }
 
         private static bool IsPreserved(char character, PreservedPrefixParts prefixParts)
