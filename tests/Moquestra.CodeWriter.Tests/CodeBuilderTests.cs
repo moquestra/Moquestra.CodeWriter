@@ -227,6 +227,81 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
+        public void Write_WithAllParts_ReplicatesLinePrefix()
+        {
+            var builder = new CodeBuilder();
+            var body = "a\nb";
+
+            builder.Write($"// {body}", PreservedPrefixParts.All);
+
+            Assert.Equal("// a\n// b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithTabsParts_PreservesTabsAndMasksOthers()
+        {
+            var builder = new CodeBuilder();
+            var body = "a\nb";
+
+            builder.Write($"\t- {body}", PreservedPrefixParts.Tabs);
+
+            Assert.Equal("\t- a\n\t  b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithNonWhitespaceParts_MasksTabsToSpaces()
+        {
+            var builder = new CodeBuilder();
+            var body = "a\nb";
+
+            builder.Write($"\t- {body}", PreservedPrefixParts.NonWhitespace);
+
+            Assert.Equal("\t- a\n - b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithNoneParts_MasksWholePrefix()
+        {
+            var builder = new CodeBuilder();
+            var body = "a\nb";
+
+            builder.Write($"\t- {body}", PreservedPrefixParts.None);
+
+            Assert.Equal("\t- a\n   b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithAllParts_LeavesEmptyLineUnprefixed()
+        {
+            var builder = new CodeBuilder();
+            var body = "a\n\nb";
+
+            builder.Write($"// {body}", PreservedPrefixParts.All);
+
+            Assert.Equal("// a\n\n// b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithAllParts_TrimsWhitespaceOnlyLineWithoutPrefix()
+        {
+            var builder = new CodeBuilder();
+            var body = "a\n \nb";
+
+            builder.Write($"// {body}", PreservedPrefixParts.All);
+
+            Assert.Equal("// a\n\n// b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithUndefinedParts_ThrowsArgumentOutOfRangeException()
+        {
+            var builder = new CodeBuilder();
+
+            Assert.Throws<ArgumentOutOfRangeException>(
+                () => builder.Write($"a", (PreservedPrefixParts)4));
+        }
+
+        [Fact]
         public void Write_WithNestedBuilder_ReindentsRenderedText()
         {
             var inner = new CodeBuilder();
