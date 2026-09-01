@@ -9,12 +9,12 @@ namespace Moquestra.CodeWriter
     /// written as-is, and multiline interpolated values are reindented from
     /// their second line with a continuation prefix derived from the line
     /// where the interpolation begins.
-    /// CRLF, CR, and LF are all normalized to a single LF.
+    /// CRLF, CR, and LF are normalized to the configured output newline.
     /// </summary>
     internal sealed class CodeBuilder
     {
         private readonly StringBuilder _builder = new StringBuilder();
-        private readonly PreservedPrefixParts _defaultPrefixParts;
+        private readonly CodeBuilderSettings _settings;
 
         // Index in _builder where the current line starts.
         private int _lineStart;
@@ -24,11 +24,10 @@ namespace Moquestra.CodeWriter
         private bool _lineTrimEligible = true;
 
         /// <summary>
-        /// Creates a builder that preserves whole continuation prefixes by
-        /// default.
+        /// Creates a builder with the default settings.
         /// </summary>
         public CodeBuilder()
-            : this(PreservedPrefixParts.All)
+            : this(CodeBuilderSettings.Default)
         {
         }
 
@@ -42,11 +41,21 @@ namespace Moquestra.CodeWriter
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="prefixParts"/>
         /// contains undefined flags.</exception>
         public CodeBuilder(PreservedPrefixParts prefixParts)
+            : this(new CodeBuilderSettings(prefixParts: prefixParts))
         {
-            if ((prefixParts & ~PreservedPrefixParts.All) != 0)
-                throw new ArgumentOutOfRangeException(nameof(prefixParts));
+        }
 
-            _defaultPrefixParts = prefixParts;
+        /// <summary>
+        /// Creates a builder with the specified settings.
+        /// </summary>
+        /// <param name="settings">The output options. Cannot be null.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="settings"/> is null.</exception>
+        public CodeBuilder(CodeBuilderSettings settings)
+        {
+            if (settings is null)
+                throw new ArgumentNullException(nameof(settings));
+
+            _settings = settings;
         }
 
         /// <summary>
@@ -61,7 +70,7 @@ namespace Moquestra.CodeWriter
         /// component, an out-of-range argument index, or an unmatched brace.</exception>
         public void Write(FormattableString text)
         {
-            Write(text, _defaultPrefixParts);
+            Write(text, _settings.PrefixParts);
         }
 
         /// <summary>
@@ -273,7 +282,7 @@ namespace Moquestra.CodeWriter
 
         private void CompleteLine()
         {
-            if (_lineTrimEligible)
+            if (_lineTrimEligible && _settings.TrimWhitespaceOnlyValueLines)
                 _builder.Length = _lineStart;
 
             AppendNewLine();
@@ -283,7 +292,7 @@ namespace Moquestra.CodeWriter
 
         private void AppendNewLine()
         {
-            _builder.Append('\n');
+            _builder.Append(_settings.NewLine);
 
             _lineStart = _builder.Length;
         }

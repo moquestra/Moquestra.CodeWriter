@@ -439,6 +439,72 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
+        public void Write_WithDefaultSettings_MatchesDefaultBuilder()
+        {
+            var body = "a\nb";
+            var withSettings = new CodeBuilder(new CodeBuilderSettings());
+            var withDefaults = new CodeBuilder();
+
+            withSettings.Write($"// {body}");
+            withDefaults.Write($"// {body}");
+
+            Assert.Equal(withDefaults.ToString(), withSettings.ToString());
+        }
+
+        [Fact]
+        public void Write_WithCrlfNewLineSetting_EmitsCrlfForLiteralAndValueNewlines()
+        {
+            var builder = new CodeBuilder(new CodeBuilderSettings(newLine: "\r\n"));
+            var body = "b\nc";
+
+            builder.Write($"a\n{body}");
+
+            Assert.Equal("a\r\nb\r\nc", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithCrlfNewLineSetting_TrimsWhitespaceOnlyValueLine()
+        {
+            var builder = new CodeBuilder(new CodeBuilderSettings(newLine: "\r\n"));
+            var body = "a\n \nb";
+
+            builder.Write($"    {body}");
+
+            Assert.Equal("    a\r\n\r\n    b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithTrimDisabled_KeepsWhitespaceOnlyValueLine()
+        {
+            var builder = new CodeBuilder(
+                new CodeBuilderSettings(trimWhitespaceOnlyValueLines: false));
+            var body = "a\n \nb";
+
+            builder.Write($"    {body}");
+
+            Assert.Equal("    a\n     \n    b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithSettingsPrefixParts_AppliesToWrite()
+        {
+            var builder = new CodeBuilder(
+                new CodeBuilderSettings(prefixParts: PreservedPrefixParts.None));
+            var body = "a\nb";
+
+            builder.Write($"\t- {body}");
+
+            Assert.Equal("\t- a\n   b", builder.ToString());
+        }
+
+        [Fact]
+        public void Constructor_WithNullSettings_ThrowsArgumentNullException()
+        {
+            Assert.Throws<ArgumentNullException>(
+                () => new CodeBuilder((CodeBuilderSettings)null!));
+        }
+
+        [Fact]
         public void Write_WithNestedBuilder_ReindentsRenderedText()
         {
             var inner = new CodeBuilder();
