@@ -100,7 +100,9 @@ namespace Moquestra.CodeWriter
                 throw new FormatException("The interpolation hole refers to an argument index outside the available range.");
 
             var argument = text.GetArgument(index);
-            var rendered = RenderArgument(argument);
+            var rendered = argument is null
+                ? string.Empty
+                : RenderArgument(argument);
 
             AppendValue(rendered);
 
@@ -160,7 +162,7 @@ namespace Moquestra.CodeWriter
             if (value is IFormattable formattable)
                 return formattable.ToString(null, CultureInfo.InvariantCulture);
 
-            return value.ToString();
+            return value.ToString() ?? string.Empty;
         }
     }
 }
