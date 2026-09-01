@@ -116,6 +116,73 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
+        public void Write_WithMultilineValueContainingConsecutiveEmptyLines_LeavesEmptyLinesUnindented()
+        {
+            var builder = new CodeBuilder();
+            var body = "a();\n\n\nb();";
+
+            builder.Write($"    {body}");
+
+            Assert.Equal("    a();\n\n\n    b();", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithTabBeforeInterpolation_CountsTabAsOneColumn()
+        {
+            var builder = new CodeBuilder();
+            var body = "a();\nb();";
+
+            builder.Write($"\t{body}");
+
+            Assert.Equal("\ta();\n b();", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithIndentedMultilineValue_PreservesValueIndentation()
+        {
+            var builder = new CodeBuilder();
+            var body = "if (x)\n    y();";
+
+            builder.Write($"    {body}");
+
+            Assert.Equal("    if (x)\n        y();", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithMultipleInterpolationsOnOneLine_AlignsEachAtItsOwnColumn()
+        {
+            var builder = new CodeBuilder();
+            var name = "v";
+            var body = "1 +\n2";
+
+            builder.Write($"{name} = {body};");
+
+            Assert.Equal("v = 1 +\n    2;", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithLeadingNewlineInValue_AlignsValueFromNextLine()
+        {
+            var builder = new CodeBuilder();
+            var body = "\n1;";
+
+            builder.Write($"x ={body}");
+
+            Assert.Equal("x =\n   1;", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithTrailingNewlineInValue_EndsWithoutIndentation()
+        {
+            var builder = new CodeBuilder();
+            var body = "a();\n";
+
+            builder.Write($"    {body}");
+
+            Assert.Equal("    a();\n", builder.ToString());
+        }
+
+        [Fact]
         public void Write_WithNestedBuilder_ReindentsRenderedText()
         {
             var inner = new CodeBuilder();
