@@ -127,6 +127,50 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
+        public void Write_WithMultilineValueContainingWhitespaceOnlyLine_TrimsLineToEmpty()
+        {
+            var builder = new CodeBuilder();
+            var body = "a();\n \t \nb();";
+
+            builder.Write($"    {body}");
+
+            Assert.Equal("    a();\n\n    b();", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithConsecutiveWhitespaceOnlyLines_TrimsEachLineToEmpty()
+        {
+            var builder = new CodeBuilder();
+            var body = "a();\n \n\t\nb();";
+
+            builder.Write($"    {body}");
+
+            Assert.Equal("    a();\n\n\n    b();", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithUnterminatedWhitespaceOnlyLine_KeepsLineIndented()
+        {
+            var builder = new CodeBuilder();
+            var body = "a();\n   ";
+
+            builder.Write($"    {body}");
+
+            Assert.Equal("    a();\n       ", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithWhitespaceOnlyFirstValueLine_LeavesFirstLineUntouched()
+        {
+            var builder = new CodeBuilder();
+            var body = "  \nx();";
+
+            builder.Write($"    {body}");
+
+            Assert.Equal("      \n    x();", builder.ToString());
+        }
+
+        [Fact]
         public void Write_WithTabBeforeInterpolation_CountsTabAsOneColumn()
         {
             var builder = new CodeBuilder();

@@ -111,6 +111,7 @@ namespace Moquestra.CodeWriter
 
         // Reindents a multiline value from its second line with spaces matching
         // the column where the interpolation began.
+        // Empties whitespace-only continuation lines.
         private void AppendValue(string value)
         {
             var column = CurrentColumn();
@@ -138,6 +139,15 @@ namespace Moquestra.CodeWriter
                 if (value[start] == '\n')
                     continue;
 
+                var lineEnd = value.IndexOf('\n', start);
+
+                if (lineEnd >= 0 && IsWhitespaceOnly(value, start, lineEnd))
+                {
+                    start = lineEnd;
+
+                    continue;
+                }
+
                 if (column > 0)
                     _builder.Append(' ', column);
             }
@@ -152,6 +162,18 @@ namespace Moquestra.CodeWriter
             }
 
             return _builder.Length;
+        }
+
+        // Treats only spaces and tabs as whitespace.
+        private static bool IsWhitespaceOnly(string value, int start, int end)
+        {
+            for (var i = start; i < end; i++)
+            {
+                if (value[i] != ' ' && value[i] != '\t')
+                    return false;
+            }
+
+            return true;
         }
 
         private static string RenderArgument(object value)
