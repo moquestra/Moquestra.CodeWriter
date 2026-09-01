@@ -142,6 +142,29 @@ namespace Moquestra.CodeWriter
         }
 
         /// <summary>
+        /// Ends the current line with a newline.
+        /// </summary>
+        public void WriteLine()
+        {
+            CompleteLine();
+        }
+
+        /// <summary>
+        /// Renders the interpolated string with the invariant culture and
+        /// accumulates it, then ends the current line with a newline.
+        /// </summary>
+        /// <param name="text">The interpolated string to accumulate. Cannot be null.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="text"/> is null.</exception>
+        /// <exception cref="FormatException">The interpolated string contains a
+        /// malformed interpolation hole, an unsupported format or alignment
+        /// component, an out-of-range argument index, or an unmatched brace.</exception>
+        public void WriteLine(FormattableString text)
+        {
+            Write(text);
+            CompleteLine();
+        }
+
+        /// <summary>
         /// Returns all accumulated text.
         /// </summary>
         /// <returns>The accumulated text.</returns>

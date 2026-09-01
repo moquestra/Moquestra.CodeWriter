@@ -505,6 +505,67 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
+        public void WriteLine_WithoutText_AppendsNewLine()
+        {
+            var builder = new CodeBuilder();
+
+            builder.WriteLine();
+
+            Assert.Equal("\n", builder.ToString());
+        }
+
+        [Fact]
+        public void WriteLine_WithText_AppendsTextAndNewLine()
+        {
+            var builder = new CodeBuilder();
+
+            builder.WriteLine($"a();");
+
+            Assert.Equal("a();\n", builder.ToString());
+        }
+
+        [Fact]
+        public void WriteLine_WithMultilineValue_ReindentsAndEndsLine()
+        {
+            var builder = new CodeBuilder();
+            var body = "a();\nb();";
+
+            builder.WriteLine($"    {body}");
+
+            Assert.Equal("    a();\n    b();\n", builder.ToString());
+        }
+
+        [Fact]
+        public void WriteLine_WithCrlfNewLineSetting_EmitsCrlf()
+        {
+            var builder = new CodeBuilder(new CodeBuilderSettings(newLine: "\r\n"));
+
+            builder.WriteLine($"a");
+
+            Assert.Equal("a\r\n", builder.ToString());
+        }
+
+        [Fact]
+        public void WriteLine_AfterWhitespaceOnlyValueTail_TrimsLine()
+        {
+            var builder = new CodeBuilder();
+            var body = "a\n ";
+
+            builder.Write($"    {body}");
+            builder.WriteLine();
+
+            Assert.Equal("    a\n\n", builder.ToString());
+        }
+
+        [Fact]
+        public void WriteLine_WithNullText_ThrowsArgumentNullException()
+        {
+            var builder = new CodeBuilder();
+
+            Assert.Throws<ArgumentNullException>(() => builder.WriteLine(null!));
+        }
+
+        [Fact]
         public void Write_WithNestedBuilder_ReindentsRenderedText()
         {
             var inner = new CodeBuilder();
