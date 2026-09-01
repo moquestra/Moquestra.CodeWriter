@@ -171,14 +171,14 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
-        public void Write_WithTabBeforeInterpolation_CountsTabAsOneColumn()
+        public void Write_WithTabBeforeInterpolation_PreservesTabOnContinuationLine()
         {
             var builder = new CodeBuilder();
             var body = "a();\nb();";
 
             builder.Write($"\t{body}");
 
-            Assert.Equal("\ta();\n b();", builder.ToString());
+            Assert.Equal("\ta();\n\tb();", builder.ToString());
         }
 
         [Fact]
@@ -193,7 +193,7 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
-        public void Write_WithMultipleInterpolationsOnOneLine_AlignsEachAtItsOwnColumn()
+        public void Write_WithMultipleInterpolationsOnOneLine_ReplicatesPrefixIncludingEarlierValues()
         {
             var builder = new CodeBuilder();
             var name = "v";
@@ -201,18 +201,18 @@ namespace Moquestra.CodeWriter.Tests
 
             builder.Write($"{name} = {body};");
 
-            Assert.Equal("v = 1 +\n    2;", builder.ToString());
+            Assert.Equal("v = 1 +\nv = 2;", builder.ToString());
         }
 
         [Fact]
-        public void Write_WithLeadingNewlineInValue_AlignsValueFromNextLine()
+        public void Write_WithLeadingNewlineInValue_ReplicatesPrefixOnNextLine()
         {
             var builder = new CodeBuilder();
             var body = "\n1;";
 
             builder.Write($"x ={body}");
 
-            Assert.Equal("x =\n   1;", builder.ToString());
+            Assert.Equal("x =\nx =1;", builder.ToString());
         }
 
         [Fact]

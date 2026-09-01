@@ -16,11 +16,11 @@ namespace Moquestra.CodeWriter
         private readonly PreservedPrefixParts _defaultPrefixParts;
 
         /// <summary>
-        /// Creates a builder that masks whole continuation prefixes by
+        /// Creates a builder that preserves whole continuation prefixes by
         /// default.
         /// </summary>
         public CodeBuilder()
-            : this(PreservedPrefixParts.None)
+            : this(PreservedPrefixParts.All)
         {
         }
 
