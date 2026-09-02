@@ -1,5 +1,8 @@
 # Moquestra.CodeWriter
 
+[![Build and test](https://github.com/moquestra/Moquestra.CodeWriter/actions/workflows/build-and-test.yml/badge.svg?branch=main)](https://github.com/moquestra/Moquestra.CodeWriter/actions/workflows/build-and-test.yml)
+[![NuGet](https://img.shields.io/nuget/v/Moquestra.CodeWriter)](https://www.nuget.org/packages/Moquestra.CodeWriter/)
+
 Source-only text writer for code generation.
 
 `CodeBuilder` accumulates interpolated strings. Literal text is written as-is,
