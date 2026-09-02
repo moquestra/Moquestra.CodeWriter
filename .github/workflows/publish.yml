@@ -1,0 +1,75 @@
+name: Publish
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Resolve the package version
+        id: version
+        run: |
+          version=$(sed -n 's/.*<Version>\(.*\)<\/Version>.*/\1/p' Directory.Build.props)
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match <Version>$version</Version>" >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - run: dotnet build Moquestra.CodeWriter.slnx -c Release -warnaserror -p:ContinuousIntegrationBuild=true
+      - run: dotnet test Moquestra.CodeWriter.slnx -c Release --no-build
+      - run: dotnet pack src/Moquestra.CodeWriter/Moquestra.CodeWriter.csproj -c Release --no-build -o artifacts/publish
+      - name: Extract the release notes
+        run: |
+          awk -v header="## [${{ steps.version.outputs.version }}]" 'index($0, header) == 1 {flag=1; next} /^## \[/{flag=0} flag' CHANGELOG.md > release-notes.md
+          if ! grep -q '[^[:space:]]' release-notes.md; then
+            echo "CHANGELOG.md has no section for ${{ steps.version.outputs.version }}" >&2
+            exit 1
+          fi
+      - name: Log in to NuGet.org
+        if: github.ref_type == 'tag'
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+      - name: Push Moquestra.CodeWriter
+        if: github.ref_type == 'tag'
+        run: dotnet nuget push "artifacts/publish/Moquestra.CodeWriter.${{ steps.version.outputs.version }}.nupkg" --api-key ${{ steps.login.outputs.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      - name: Create or repair the GitHub release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          expected="Moquestra.CodeWriter.$VERSION.nupkg"
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" artifacts/publish/*.nupkg --title "$GITHUB_REF_NAME" --notes-file release-notes.md
+            exit 0
+          fi
+          draft=$(gh release view "$GITHUB_REF_NAME" --json isDraft --jq .isDraft)
+          assets=$(gh release view "$GITHUB_REF_NAME" --json assets --jq '.assets[].name')
+          if [ "$draft" = "true" ]; then
+            for name in $expected; do
+              if ! printf '%s\n' "$assets" | grep -Fxq "$name"; then
+                gh release upload "$GITHUB_REF_NAME" "artifacts/publish/$name"
+              fi
+            done
+            gh release edit "$GITHUB_REF_NAME" --draft=false
+            exit 0
+          fi
+          for name in $expected; do
+            if ! printf '%s\n' "$assets" | grep -Fxq "$name"; then
+              echo "Published release $GITHUB_REF_NAME is missing asset $name" >&2
+              exit 1
+            fi
+          done
