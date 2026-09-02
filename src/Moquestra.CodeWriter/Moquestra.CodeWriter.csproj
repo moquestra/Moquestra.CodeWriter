@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Nullable>enable</Nullable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -16,10 +15,6 @@
 
   <ItemGroup>
     <Compile Update="**/*.cs" Pack="true" PackagePath="contentFiles/cs/netstandard2.0/Moquestra.CodeWriter/" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <InternalsVisibleTo Include="Moquestra.CodeWriter.Tests" />
   </ItemGroup>
 
 </Project>
