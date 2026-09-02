@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -16,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Moquestra.CodeWriter\Moquestra.CodeWriter.csproj" />
+    <Compile Include="..\..\src\Moquestra.CodeWriter\**\*.cs" LinkBase="Sources" />
   </ItemGroup>
 
 </Project>
