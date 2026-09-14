@@ -12,75 +12,103 @@ namespace Moquestra.CodeWriter
     internal sealed class XmlDoc
     {
         private readonly List<string> _lines = new List<string>();
+        private readonly XmlDocForm _form;
+
+        /// <summary>
+        /// Creates a document whose text-bearing tags use <paramref name="form"/>
+        /// unless a call specifies another form.
+        /// </summary>
+        /// <param name="form">The default tag form.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="form"/> is undefined.</exception>
+        public XmlDoc(XmlDocForm form = XmlDocForm.Auto)
+        {
+            _form = Validate(form, nameof(form));
+        }
 
         /// <summary>Adds a <c>summary</c> tag.</summary>
         /// <param name="text">The text. Cannot be null.</param>
+        /// <param name="form">The tag form, or null for the default form.</param>
         /// <exception cref="ArgumentNullException"><paramref name="text"/> is null.</exception>
-        public XmlDoc Summary(string text)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="form"/> is undefined.</exception>
+        public XmlDoc Summary(string text, XmlDocForm? form = null)
         {
-            return Element("summary", string.Empty, text);
+            return Element("summary", string.Empty, text, form);
         }
 
         /// <summary>Adds a <c>remarks</c> tag.</summary>
         /// <param name="text">The text. Cannot be null.</param>
+        /// <param name="form">The tag form, or null for the default form.</param>
         /// <exception cref="ArgumentNullException"><paramref name="text"/> is null.</exception>
-        public XmlDoc Remarks(string text)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="form"/> is undefined.</exception>
+        public XmlDoc Remarks(string text, XmlDocForm? form = null)
         {
-            return Element("remarks", string.Empty, text);
+            return Element("remarks", string.Empty, text, form);
         }
 
         /// <summary>Adds a <c>returns</c> tag.</summary>
         /// <param name="text">The text. Cannot be null.</param>
+        /// <param name="form">The tag form, or null for the default form.</param>
         /// <exception cref="ArgumentNullException"><paramref name="text"/> is null.</exception>
-        public XmlDoc Returns(string text)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="form"/> is undefined.</exception>
+        public XmlDoc Returns(string text, XmlDocForm? form = null)
         {
-            return Element("returns", string.Empty, text);
+            return Element("returns", string.Empty, text, form);
         }
 
         /// <summary>Adds a <c>value</c> tag.</summary>
         /// <param name="text">The text. Cannot be null.</param>
+        /// <param name="form">The tag form, or null for the default form.</param>
         /// <exception cref="ArgumentNullException"><paramref name="text"/> is null.</exception>
-        public XmlDoc Value(string text)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="form"/> is undefined.</exception>
+        public XmlDoc Value(string text, XmlDocForm? form = null)
         {
-            return Element("value", string.Empty, text);
+            return Element("value", string.Empty, text, form);
         }
 
         /// <summary>Adds an <c>example</c> tag.</summary>
         /// <param name="text">The text. Cannot be null.</param>
+        /// <param name="form">The tag form, or null for the default form.</param>
         /// <exception cref="ArgumentNullException"><paramref name="text"/> is null.</exception>
-        public XmlDoc Example(string text)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="form"/> is undefined.</exception>
+        public XmlDoc Example(string text, XmlDocForm? form = null)
         {
-            return Element("example", string.Empty, text);
+            return Element("example", string.Empty, text, form);
         }
 
         /// <summary>Adds a <c>param</c> tag.</summary>
         /// <param name="name">The parameter name. Cannot be null or empty.</param>
         /// <param name="text">The text. Cannot be null.</param>
+        /// <param name="form">The tag form, or null for the default form.</param>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> or <paramref name="text"/> is null.</exception>
         /// <exception cref="ArgumentException"><paramref name="name"/> is empty.</exception>
-        public XmlDoc Param(string name, string text)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="form"/> is undefined.</exception>
+        public XmlDoc Param(string name, string text, XmlDocForm? form = null)
         {
-            return Element("param", Attribute("name", name), text);
+            return Element("param", Attribute("name", name), text, form);
         }
 
         /// <summary>Adds a <c>typeparam</c> tag.</summary>
         /// <param name="name">The type parameter name. Cannot be null or empty.</param>
         /// <param name="text">The text. Cannot be null.</param>
+        /// <param name="form">The tag form, or null for the default form.</param>
         /// <exception cref="ArgumentNullException"><paramref name="name"/> or <paramref name="text"/> is null.</exception>
         /// <exception cref="ArgumentException"><paramref name="name"/> is empty.</exception>
-        public XmlDoc TypeParam(string name, string text)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="form"/> is undefined.</exception>
+        public XmlDoc TypeParam(string name, string text, XmlDocForm? form = null)
         {
-            return Element("typeparam", Attribute("name", name), text);
+            return Element("typeparam", Attribute("name", name), text, form);
         }
 
         /// <summary>Adds an <c>exception</c> tag.</summary>
         /// <param name="cref">The exception type reference. Cannot be null or empty.</param>
         /// <param name="text">The text. Cannot be null.</param>
+        /// <param name="form">The tag form, or null for the default form.</param>
         /// <exception cref="ArgumentNullException"><paramref name="cref"/> or <paramref name="text"/> is null.</exception>
         /// <exception cref="ArgumentException"><paramref name="cref"/> is empty.</exception>
-        public XmlDoc Exception(string cref, string text)
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="form"/> is undefined.</exception>
+        public XmlDoc Exception(string cref, string text, XmlDocForm? form = null)
         {
-            return Element("exception", Attribute("cref", cref), text);
+            return Element("exception", Attribute("cref", cref), text, form);
         }
 
         /// <summary>Adds an <c>inheritdoc</c> tag without a reference.</summary>
@@ -142,27 +170,43 @@ namespace Moquestra.CodeWriter
                 .Replace(">", "&gt;");
         }
 
-        // Adds the element inline when the text is a single line and as a block
-        // otherwise.
-        private XmlDoc Element(string tag, string attributes, string text)
+        // Auto renders a single line inline and multiple lines as a block.
+        private XmlDoc Element(string tag, string attributes, string text, XmlDocForm? form)
         {
             if (text is null)
                 throw new ArgumentNullException(nameof(text));
 
+            var effective = form.HasValue
+                ? Validate(form.Value, nameof(form))
+                : _form;
             var lines = SplitLines(text);
+            var open = "<" + tag + attributes + ">";
+            var close = "</" + tag + ">";
+            var block = (effective == XmlDocForm.Auto && lines.Count > 1) ||
+                        effective == XmlDocForm.Block;
 
-            if (lines.Count == 1)
+            if (block)
             {
-                _lines.Add("<" + tag + attributes + ">" + lines[0] + "</" + tag + ">");
+                _lines.Add(open);
+                _lines.AddRange(lines);
+                _lines.Add(close);
 
                 return this;
             }
 
-            _lines.Add("<" + tag + attributes + ">");
+            lines[0] = open + lines[0];
+            lines[lines.Count - 1] = lines[lines.Count - 1] + close;
             _lines.AddRange(lines);
-            _lines.Add("</" + tag + ">");
 
             return this;
+        }
+
+        private static XmlDocForm Validate(XmlDocForm form, string paramName)
+        {
+            if (form < XmlDocForm.Auto || form > XmlDocForm.Block)
+                throw new ArgumentOutOfRangeException(paramName);
+
+            return form;
         }
 
         // The attribute name doubles as the parameter name, so it is also the

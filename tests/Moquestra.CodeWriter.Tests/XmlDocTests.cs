@@ -229,5 +229,67 @@ namespace Moquestra.CodeWriter.Tests
         {
             Assert.Throws<ArgumentException>(() => new XmlDoc().SeeAlso(string.Empty));
         }
+
+        [Fact]
+        public void Summary_WithBlockForm_RendersSingleLineAsBlock()
+        {
+            var doc = new XmlDoc().Summary("Gets the value.", XmlDocForm.Block);
+
+            Assert.Equal("<summary>\nGets the value.\n</summary>", doc.ToString());
+        }
+
+        [Fact]
+        public void Param_WithBlockForm_RendersAttributeOnOpeningTag()
+        {
+            var doc = new XmlDoc().Param("id", "The ID.", XmlDocForm.Block);
+
+            Assert.Equal("<param name=\"id\">\nThe ID.\n</param>", doc.ToString());
+        }
+
+        [Fact]
+        public void Param_WithInlineFormAndMultipleLines_ClosesOnLastLine()
+        {
+            var doc = new XmlDoc().Param("id", "The ID.\nCannot be negative.", XmlDocForm.Inline);
+
+            Assert.Equal("<param name=\"id\">The ID.\nCannot be negative.</param>", doc.ToString());
+        }
+
+        [Fact]
+        public void Constructor_WithBlockForm_AppliesToTextBearingTagsOnly()
+        {
+            var doc = new XmlDoc(XmlDocForm.Block)
+                .Summary("Gets the value.")
+                .Returns("The value.")
+                .InheritDoc();
+
+            Assert.Equal(
+                "<summary>\nGets the value.\n</summary>\n<returns>\nThe value.\n</returns>\n<inheritdoc/>",
+                doc.ToString());
+        }
+
+        [Fact]
+        public void Summary_WithFormArgument_OverridesDefaultForm()
+        {
+            var doc = new XmlDoc(XmlDocForm.Block).Summary("Text.", XmlDocForm.Inline);
+
+            Assert.Equal("<summary>Text.</summary>", doc.ToString());
+        }
+
+        [Fact]
+        public void Constructor_WithUndefinedForm_ThrowsArgumentOutOfRangeException()
+        {
+            var exception = Assert.Throws<ArgumentOutOfRangeException>(() => new XmlDoc((XmlDocForm)3));
+
+            Assert.Equal("form", exception.ParamName);
+        }
+
+        [Fact]
+        public void Summary_WithUndefinedForm_ThrowsArgumentOutOfRangeException()
+        {
+            var exception = Assert.Throws<ArgumentOutOfRangeException>(
+                () => new XmlDoc().Summary("Text.", (XmlDocForm)3));
+
+            Assert.Equal("form", exception.ParamName);
+        }
     }
 }
