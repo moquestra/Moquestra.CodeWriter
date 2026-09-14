@@ -109,14 +109,19 @@ Values that implement `IFormattable` are rendered with the invariant culture;
 other values fall back to `ToString()`, and `null` renders as an empty string. A
 `CodeBuilder` can be interpolated into another builder, so fragments compose.
 
+To repeat a template for a sequence of items, render each fragment with its own
+`CodeBuilder`, join the results, and interpolate the joined text. A fragment
+built as a plain interpolated string never passes through a builder, so
+multiline values inside it are not reindented.
+
 An interpolation hole holds a plain expression. Format and alignment components
 inside a hole - `{value:X}`, `{value,-10}` - are not supported and throw
 `FormatException`.
 
 ### Continuation prefixes
 
-Each non-empty line of a multiline value after the first receives a
-continuation prefix derived from the line where the interpolation began.
+Each line of a multiline value after the first receives a continuation prefix
+derived from the line where the interpolation began.
 `PreservedPrefixParts` selects which characters of that line are kept verbatim;
 the rest are each replaced with a space.
 
@@ -127,11 +132,18 @@ the rest are each replaced with a space.
 | `NonWhitespace` | `" - "` |
 | `None` | `"   "` |
 
-Empty lines get no prefix. When a line ends holding only prefix and value
-whitespace, it is emptied (`TrimWhitespaceOnlyValueLines`).
+An empty line, or a line emptied by trimming, keeps the prefix without its
+trailing whitespace - so `///` continues while indentation does not.
 
 `Write(FormattableString, PreservedPrefixParts)` overrides the selection for
 one call.
+
+### Whitespace-only lines
+
+A line that ends holding nothing but spaces and tabs is emptied, whether the
+whitespace came from literal text or from a value (`TrimWhitespaceOnlyLines`,
+on by default). The check runs when the line ends, so text appended to an open
+line is unaffected.
 
 ### Settings
 
@@ -139,8 +151,8 @@ one call.
 
 ```csharp
 var settings = new CodeBuilderSettings(
-    newLine: "\r\n",                    // "\n" (default) or "\r\n"
-    trimWhitespaceOnlyValueLines: true, // default
+    newLine: "\r\n",               // "\n" (default) or "\r\n"
+    trimWhitespaceOnlyLines: true, // default
     prefixParts: PreservedPrefixParts.All);
 
 var builder = new CodeBuilder(settings);
@@ -148,6 +160,51 @@ var builder = new CodeBuilder(settings);
 
 Input line endings - CRLF, CR and LF - are normalized to the configured newline,
 in literals and in interpolated values alike.
+
+### XML documentation comments
+
+`XmlDoc` assembles the lines of an XML documentation comment. Tags render in
+call order, and `ToString()` joins the lines with LF and no comment prefix, so
+the prefix comes from the template:
+
+```csharp
+var doc = new XmlDoc()
+    .Summary("Gets the value.")
+    .Param("id", "The ID to look up.")
+    .Returns("The value, or null when the ID is unknown.");
+
+builder.Write($"/// {doc}");
+```
+
+```
+/// <summary>Gets the value.</summary>
+/// <param name="id">The ID to look up.</param>
+/// <returns>The value, or null when the ID is unknown.</returns>
+```
+
+Ten tags are available: `Summary`, `Remarks`, `Returns`, `Value`, `Example`,
+`Param`, `TypeParam`, `Exception`, `InheritDoc` and `SeeAlso`. Text is written
+as-is, so inline markup such as `<c>` and `<see cref="..."/>` can be embedded;
+`XmlDoc.Escape` escapes a value that must appear literally. Attribute values -
+names and `cref` references - are always escaped.
+
+A text-bearing tag renders inline when its text is a single line and as a
+block - opening tag, text lines, closing tag - when it spans several lines. Pass
+an `XmlDocForm` to the constructor to change the default for the document, or
+to a tag method to change it for one call:
+
+```csharp
+var doc = new XmlDoc(XmlDocForm.Block)
+    .Summary("Gets the value.")
+    .Param("id", "The ID to look up.", XmlDocForm.Inline);
+```
+
+```
+<summary>
+Gets the value.
+</summary>
+<param name="id">The ID to look up.</param>
+```
 
 ## Requirements
 
