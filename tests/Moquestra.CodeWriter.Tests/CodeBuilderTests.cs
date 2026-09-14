@@ -160,14 +160,14 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
-        public void Write_WithLiteralCharactersBeforeWhitespaceOnlyFirstValueLine_KeepsLine()
+        public void Write_WithLiteralWhitespaceBeforeWhitespaceOnlyFirstValueLine_TrimsLine()
         {
             var builder = new CodeBuilder();
             var body = "  \nx();";
 
             builder.Write($"    {body}");
 
-            Assert.Equal("      \n    x();", builder.ToString());
+            Assert.Equal("\n    x();", builder.ToString());
         }
 
         [Fact]
@@ -318,7 +318,7 @@ namespace Moquestra.CodeWriter.Tests
         public void Write_WithTrimDisabledAndWhitespaceOnlyLine_KeepsFullPrefixAndSpaces()
         {
             var builder = new CodeBuilder(
-                new CodeBuilderSettings(trimWhitespaceOnlyValueLines: false));
+                new CodeBuilderSettings(trimWhitespaceOnlyLines: false));
             var body = "a\n \nb";
 
             builder.Write($"// {body}");
@@ -395,24 +395,56 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
-        public void Write_WithLiteralSpaceAfterValueWhitespace_KeepsLine()
+        public void Write_WithLiteralSpaceAfterValueWhitespace_TrimsLine()
         {
             var builder = new CodeBuilder();
             var body = "a\n ";
 
             builder.Write($"{body} \nb");
 
-            Assert.Equal("a\n  \nb", builder.ToString());
+            Assert.Equal("a\n\nb", builder.ToString());
         }
 
         [Fact]
-        public void Write_WithLiteralWhitespaceOnlyLine_KeepsLine()
+        public void Write_WithLiteralWhitespaceOnlyLine_TrimsLine()
         {
             var builder = new CodeBuilder();
 
             builder.Write($"a\n   \nb");
 
+            Assert.Equal("a\n\nb", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithLiteralTabOnlyLine_TrimsLine()
+        {
+            var builder = new CodeBuilder();
+
+            builder.Write($"a\n\t\nb");
+
+            Assert.Equal("a\n\nb", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithTrimDisabledAndLiteralWhitespaceOnlyLine_KeepsLine()
+        {
+            var builder = new CodeBuilder(
+                new CodeBuilderSettings(trimWhitespaceOnlyLines: false));
+
+            builder.Write($"a\n   \nb");
+
             Assert.Equal("a\n   \nb", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithIndentedHoleAndEmptyValue_TrimsIndentation()
+        {
+            var builder = new CodeBuilder();
+            var body = string.Empty;
+
+            builder.Write($"{{\n    {body}\n}}");
+
+            Assert.Equal("{\n\n}", builder.ToString());
         }
 
         [Fact]
@@ -522,7 +554,7 @@ namespace Moquestra.CodeWriter.Tests
         public void Write_WithTrimDisabled_KeepsWhitespaceOnlyValueLine()
         {
             var builder = new CodeBuilder(
-                new CodeBuilderSettings(trimWhitespaceOnlyValueLines: false));
+                new CodeBuilderSettings(trimWhitespaceOnlyLines: false));
             var body = "a\n \nb";
 
             builder.Write($"    {body}");
@@ -600,6 +632,32 @@ namespace Moquestra.CodeWriter.Tests
             builder.WriteLine();
 
             Assert.Equal("    a\n\n", builder.ToString());
+        }
+
+        [Fact]
+        public void WriteLine_AfterLiteralIndentationAndWhitespaceOnlyValue_TrimsLine()
+        {
+            var builder = new CodeBuilder();
+            var body = "  ";
+
+            builder.Write($"\n    ");
+            builder.Write($"{body}");
+            builder.WriteLine();
+
+            Assert.Equal("\n\n", builder.ToString());
+        }
+
+        [Fact]
+        public void WriteLine_AfterLiteralIndentationAndValue_KeepsIndentation()
+        {
+            var builder = new CodeBuilder();
+            var body = "x";
+
+            builder.Write($"\n    ");
+            builder.Write($"{body}");
+            builder.WriteLine();
+
+            Assert.Equal("\n    x\n", builder.ToString());
         }
 
         [Fact]

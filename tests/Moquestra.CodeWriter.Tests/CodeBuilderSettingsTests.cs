@@ -12,7 +12,7 @@ namespace Moquestra.CodeWriter.Tests
             var settings = new CodeBuilderSettings();
 
             Assert.Equal("\n", settings.NewLine);
-            Assert.True(settings.TrimWhitespaceOnlyValueLines);
+            Assert.True(settings.TrimWhitespaceOnlyLines);
             Assert.Equal(PreservedPrefixParts.All, settings.PrefixParts);
         }
 

@@ -4,7 +4,7 @@ namespace Moquestra.CodeWriter
 {
     /// <summary>
     /// Specifies immutable output options for CodeBuilder. By default,
-    /// newlines are written as LF, whitespace-only value lines are trimmed,
+    /// newlines are written as LF, whitespace-only lines are trimmed,
     /// and continuation prefixes are preserved in full.
     /// </summary>
     internal sealed class CodeBuilderSettings
@@ -18,8 +18,8 @@ namespace Moquestra.CodeWriter
         /// Creates settings with the specified options.
         /// </summary>
         /// <param name="newLine">The output newline string.</param>
-        /// <param name="trimWhitespaceOnlyValueLines">Whether completed lines
-        /// holding only value spaces and tabs are emptied.</param>
+        /// <param name="trimWhitespaceOnlyLines">Whether completed lines
+        /// holding only spaces and tabs are emptied.</param>
         /// <param name="prefixParts">The character kinds preserved verbatim in
         /// continuation line prefixes.</param>
         /// <exception cref="ArgumentNullException"><paramref name="newLine"/> is null.</exception>
@@ -29,7 +29,7 @@ namespace Moquestra.CodeWriter
         /// contains undefined flags.</exception>
         public CodeBuilderSettings(
             string newLine = "\n",
-            bool trimWhitespaceOnlyValueLines = true,
+            bool trimWhitespaceOnlyLines = true,
             PreservedPrefixParts prefixParts = PreservedPrefixParts.All)
         {
             if (newLine is null)
@@ -42,7 +42,7 @@ namespace Moquestra.CodeWriter
                 throw new ArgumentOutOfRangeException(nameof(prefixParts));
 
             NewLine = newLine;
-            TrimWhitespaceOnlyValueLines = trimWhitespaceOnlyValueLines;
+            TrimWhitespaceOnlyLines = trimWhitespaceOnlyLines;
             PrefixParts = prefixParts;
         }
 
@@ -52,11 +52,12 @@ namespace Moquestra.CodeWriter
         public string NewLine { get; }
 
         /// <summary>
-        /// Whether completed lines holding only value spaces and tabs are
-        /// emptied. Inside a multiline value, an emptied line keeps its
-        /// continuation prefix without trailing whitespace.
+        /// Whether completed lines are emptied when their content other than
+        /// generated prefixes consists only of spaces and tabs. Inside a multiline
+        /// value, an emptied line keeps its continuation prefix without trailing
+        /// whitespace.
         /// </summary>
-        public bool TrimWhitespaceOnlyValueLines { get; }
+        public bool TrimWhitespaceOnlyLines { get; }
 
         /// <summary>
         /// The character kinds preserved verbatim in continuation line
