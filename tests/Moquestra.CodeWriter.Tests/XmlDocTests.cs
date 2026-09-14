@@ -195,6 +195,32 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
+        public void Write_WithXmlDocContainingEmptyLine_KeepsCommentPrefix()
+        {
+            var doc = new XmlDoc().Summary("First line.\n\nSecond line.");
+            var builder = new CodeBuilder();
+
+            builder.Write($"/// {doc}");
+
+            Assert.Equal(
+                "/// <summary>\n/// First line.\n///\n/// Second line.\n/// </summary>",
+                builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithXmlDocContainingWhitespaceOnlyLine_KeepsCommentPrefix()
+        {
+            var doc = new XmlDoc().Summary("First line.\n   \nSecond line.");
+            var builder = new CodeBuilder();
+
+            builder.Write($"/// {doc}");
+
+            Assert.Equal(
+                "/// <summary>\n/// First line.\n///\n/// Second line.\n/// </summary>",
+                builder.ToString());
+        }
+
+        [Fact]
         public void Summary_WithNullText_ThrowsArgumentNullException()
         {
             Assert.Throws<ArgumentNullException>(() => new XmlDoc().Summary(null!));

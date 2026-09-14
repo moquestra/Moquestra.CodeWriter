@@ -53,7 +53,8 @@ namespace Moquestra.CodeWriter
 
         /// <summary>
         /// Whether completed lines holding only value spaces and tabs are
-        /// emptied.
+        /// emptied. Inside a multiline value, an emptied line keeps its
+        /// continuation prefix without trailing whitespace.
         /// </summary>
         public bool TrimWhitespaceOnlyValueLines { get; }
 
