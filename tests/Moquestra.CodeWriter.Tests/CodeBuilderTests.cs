@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 
 using Xunit;
 
@@ -705,6 +706,71 @@ namespace Moquestra.CodeWriter.Tests
             var builder = new CodeBuilder();
 
             Assert.Throws<FormatException>(() => builder.Write($"{42,-10}"));
+        }
+
+        [Fact]
+        public void Write_WithFactoryCreatedString_RendersArguments()
+        {
+            var builder = new CodeBuilder();
+            var text = FormattableStringFactory.Create("{0} and {1}", "a", "b");
+
+            builder.Write(text);
+
+            Assert.Equal("a and b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithEmptyHole_ThrowsFormatException()
+        {
+            var builder = new CodeBuilder();
+            var text = FormattableStringFactory.Create("{}");
+
+            Assert.Throws<FormatException>(() => builder.Write(text));
+        }
+
+        [Fact]
+        public void Write_WithNonDigitHole_ThrowsFormatException()
+        {
+            var builder = new CodeBuilder();
+            var text = FormattableStringFactory.Create("{a}", "x");
+
+            Assert.Throws<FormatException>(() => builder.Write(text));
+        }
+
+        [Fact]
+        public void Write_WithUnterminatedHole_ThrowsFormatException()
+        {
+            var builder = new CodeBuilder();
+            var text = FormattableStringFactory.Create("{0", "x");
+
+            Assert.Throws<FormatException>(() => builder.Write(text));
+        }
+
+        [Fact]
+        public void Write_WithTrailingOpenBrace_ThrowsFormatException()
+        {
+            var builder = new CodeBuilder();
+            var text = FormattableStringFactory.Create("a{");
+
+            Assert.Throws<FormatException>(() => builder.Write(text));
+        }
+
+        [Fact]
+        public void Write_WithOutOfRangeIndex_ThrowsFormatException()
+        {
+            var builder = new CodeBuilder();
+            var text = FormattableStringFactory.Create("{1}", "x");
+
+            Assert.Throws<FormatException>(() => builder.Write(text));
+        }
+
+        [Fact]
+        public void Write_WithUnmatchedClosingBrace_ThrowsFormatException()
+        {
+            var builder = new CodeBuilder();
+            var text = FormattableStringFactory.Create("a}");
+
+            Assert.Throws<FormatException>(() => builder.Write(text));
         }
 
         [Fact]
