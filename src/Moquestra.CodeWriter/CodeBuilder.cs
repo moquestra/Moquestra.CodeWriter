@@ -19,8 +19,8 @@ namespace Moquestra.CodeWriter
         // Index in _builder where the current line starts.
         private int _lineStart;
 
-        // Eligible only while the line contains generated prefixes and value
-        // spaces or tabs.
+        // Generated prefixes are ignored. The line stays eligible while all other
+        // characters are spaces or tabs.
         private bool _lineTrimEligible = true;
 
         /// <summary>
@@ -267,7 +267,7 @@ namespace Moquestra.CodeWriter
 
             if (!lineIsEmpty)
             {
-                if (!_lineTrimEligible || !_settings.TrimWhitespaceOnlyValueLines)
+                if (!_lineTrimEligible || !_settings.TrimWhitespaceOnlyLines)
                     return;
 
                 _builder.Length = _lineStart;
@@ -302,7 +302,9 @@ namespace Moquestra.CodeWriter
 
         private void AppendLiteral(char character)
         {
-            _lineTrimEligible = false;
+            if (character != ' ' && character != '\t')
+                _lineTrimEligible = false;
+
             _builder.Append(character);
         }
 
@@ -332,7 +334,7 @@ namespace Moquestra.CodeWriter
 
         private void CompleteLine()
         {
-            if (_lineTrimEligible && _settings.TrimWhitespaceOnlyValueLines)
+            if (_lineTrimEligible && _settings.TrimWhitespaceOnlyLines)
                 _builder.Length = _lineStart;
 
             AppendNewLine();
