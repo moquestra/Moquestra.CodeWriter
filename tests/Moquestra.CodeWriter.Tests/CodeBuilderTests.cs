@@ -271,25 +271,70 @@ namespace Moquestra.CodeWriter.Tests
         }
 
         [Fact]
-        public void Write_WithAllParts_LeavesEmptyLineUnprefixed()
+        public void Write_WithAllParts_KeepsNonWhitespacePrefixOnEmptyLine()
         {
             var builder = new CodeBuilder();
             var body = "a\n\nb";
 
             builder.Write($"// {body}", PreservedPrefixParts.All);
 
-            Assert.Equal("// a\n\n// b", builder.ToString());
+            Assert.Equal("// a\n//\n// b", builder.ToString());
         }
 
         [Fact]
-        public void Write_WithAllParts_TrimsWhitespaceOnlyLineWithoutPrefix()
+        public void Write_WithAllParts_KeepsNonWhitespacePrefixOnWhitespaceOnlyLine()
         {
             var builder = new CodeBuilder();
             var body = "a\n \nb";
 
             builder.Write($"// {body}", PreservedPrefixParts.All);
 
-            Assert.Equal("// a\n\n// b", builder.ToString());
+            Assert.Equal("// a\n//\n// b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithNoneParts_LeavesEmptyLineUnprefixed()
+        {
+            var builder = new CodeBuilder();
+            var body = "a\n\nb";
+
+            builder.Write($"// {body}", PreservedPrefixParts.None);
+
+            Assert.Equal("// a\n\n   b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithTabPrefixAndEmptyLine_KeepsPrefixWithoutTrailingSpace()
+        {
+            var builder = new CodeBuilder();
+            var body = "a\n\nb";
+
+            builder.Write($"\t- {body}", PreservedPrefixParts.All);
+
+            Assert.Equal("\t- a\n\t-\n\t- b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithTrimDisabledAndWhitespaceOnlyLine_KeepsFullPrefixAndSpaces()
+        {
+            var builder = new CodeBuilder(
+                new CodeBuilderSettings(trimWhitespaceOnlyValueLines: false));
+            var body = "a\n \nb";
+
+            builder.Write($"// {body}");
+
+            Assert.Equal("// a\n//  \n// b", builder.ToString());
+        }
+
+        [Fact]
+        public void Write_WithTrailingValueNewlineBeforeLiteralNewline_LeavesLineEmpty()
+        {
+            var builder = new CodeBuilder();
+            var body = "a\n";
+
+            builder.Write($"// {body}\nx");
+
+            Assert.Equal("// a\n\nx", builder.ToString());
         }
 
         [Fact]

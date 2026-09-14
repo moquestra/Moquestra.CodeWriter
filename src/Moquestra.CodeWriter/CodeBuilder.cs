@@ -221,18 +221,25 @@ namespace Moquestra.CodeWriter
             }
 
             var prefix = CreateContinuationPrefix(prefixParts);
+            var emptyLinePrefix = prefix.TrimEnd(' ', '\t');
             var needPrefix = false;
+            var continuation = false;
 
             for (var i = 0; i < value.Length; i++)
             {
-                if (ScanNewLine(value, ref i))
+                var current = value[i];
+
+                if (current == '\r' || current == '\n')
                 {
+                    if (continuation)
+                        KeepEmptyLinePrefix(emptyLinePrefix, needPrefix);
+
+                    ScanNewLine(value, ref i);
                     needPrefix = true;
+                    continuation = true;
 
                     continue;
                 }
-
-                var current = value[i];
 
                 if (needPrefix)
                 {
@@ -248,6 +255,26 @@ namespace Moquestra.CodeWriter
 
                 _builder.Append(current);
             }
+        }
+
+        // Keeps the prefix without its trailing whitespace on a continuation
+        // line that is closed inside the value while empty or emptied by
+        // trimming, so a comment marker continues onto that line.
+        private void KeepEmptyLinePrefix(string emptyLinePrefix, bool lineIsEmpty)
+        {
+            if (emptyLinePrefix.Length == 0)
+                return;
+
+            if (!lineIsEmpty)
+            {
+                if (!_lineTrimEligible || !_settings.TrimWhitespaceOnlyValueLines)
+                    return;
+
+                _builder.Length = _lineStart;
+            }
+
+            _builder.Append(emptyLinePrefix);
+            _lineTrimEligible = false;
         }
 
         // Returns the current line prefix, keeping preserved characters
