@@ -8,6 +8,7 @@
   <PropertyGroup>
     <PackageId>Moquestra.CodeWriter</PackageId>
     <Description>Source-only text writer for code generation.</Description>
+    <PackageTags>codegen;code-generation;source-generator;text-writer;indentation;source-only</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <NoWarn>$(NoWarn);NU5128</NoWarn>
